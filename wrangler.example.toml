@@ -1,0 +1,37 @@
+name = "english-for-waiters-bot"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "english-waiters-db"
+database_id = "YOUR_D1_DATABASE_ID" # Замените на ваш ID
+
+# KV Namespaces
+[[kv_namespaces]]
+binding = "USER_SESSIONS"
+id = "YOUR_USER_SESSIONS_KV_ID" # Замените на ваш ID
+
+[[kv_namespaces]]
+binding = "LESSON_CACHE"
+id = "YOUR_LESSON_CACHE_KV_ID" # Замените на ваш ID
+
+[[kv_namespaces]]
+binding = "AI_CONTEXT"
+id = "YOUR_AI_CONTEXT_KV_ID" # Замените на ваш ID
+
+# AI Binding
+[[ai]]
+binding = "AI"
+
+# Environment Variables (не добавляйте секреты сюда!)
+[vars]
+# Все секреты должны быть добавлены через wrangler secret put
+# TELEGRAM_BOT_TOKEN - добавьте через: wrangler secret put TELEGRAM_BOT_TOKEN
+# WEBHOOK_SECRET - добавьте через: wrangler secret put WEBHOOK_SECRET
+# CLOUDFLARE_AI_TOKEN - добавьте через: wrangler secret put CLOUDFLARE_AI_TOKEN
+
+# Примеры переменных окружения (не секреты)
+BOT_NAME = "English for Waiters Bot"
+MAX_LESSONS_PER_DAY = "5"
