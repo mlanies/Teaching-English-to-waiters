@@ -9,6 +9,17 @@
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-orange)](https://workers.cloudflare.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Try Bot](https://img.shields.io/badge/Try-Bot-blue)](https://t.me/TeachingEnglishtowaiters_bot)
+
+## 🚀 Попробовать бота
+
+**Протестируйте бота прямо сейчас!** 👇
+
+[![Start Bot](https://img.shields.io/badge/🚀_Start_English_for_Waiters_Bot-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/TeachingEnglishtowaiters_bot)
+
+> **Ссылка на бота**: [@TeachingEnglishtowaiters_bot](https://t.me/TeachingEnglishtowaiters_bot)
+
+---
 
 ## 📋 Описание
 
@@ -179,6 +190,10 @@ src/
 ```
 
 ## 🎮 Использование
+
+### 🚀 Быстрый старт
+
+**Хотите попробовать бота прямо сейчас?** Перейдите по ссылке: [@TeachingEnglishtowaiters_bot](https://t.me/TeachingEnglishtowaiters_bot)
 
 ### Основные команды
 
