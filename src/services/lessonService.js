@@ -282,7 +282,7 @@ export async function startLesson(user, session, env) {
       currentLesson: {
         id: lesson.id,
         title: lesson.title,
-        questions: lesson.questions,
+        questions: lesson.content.questions,
         currentQuestionIndex: 0,
         startTime: Date.now(),
         totalScore: 0,
@@ -290,7 +290,7 @@ export async function startLesson(user, session, env) {
       }
     };
 
-    const firstQuestion = lesson.questions[0];
+    const firstQuestion = lesson.content.questions[0];
     const keyboard = getQuestionKeyboard(firstQuestion);
 
     return {
