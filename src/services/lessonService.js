@@ -4,100 +4,7 @@ import { analyzeWithAI } from './aiService.js';
 import { createTTSService } from './ttsService.js';
 import { createTelegramService } from './telegram.js';
 
-export async function processLessonAnswer(text, user, session, env) {
-  try {
-    const currentLesson = session.currentLesson;
-    const currentQuestion = currentLesson.questions[currentLesson.currentQuestionIndex];
-    
-    // Анализируем ответ с помощью AI
-    const aiAnalysis = await analyzeWithAI(env.AI, text, user, currentQuestion);
-    
-    // Проверяем правильность ответа
-    const isCorrect = checkAnswer(text, currentQuestion);
-    const score = calculateScore(isCorrect, aiAnalysis.score);
-    
-    // Обновляем прогресс урока
-    const updatedLesson = {
-      ...currentLesson,
-      answers: [...(currentLesson.answers || []), {
-        question: currentLesson.currentQuestionIndex,
-        userAnswer: text,
-        isCorrect,
-        aiScore: aiAnalysis.score,
-        aiFeedback: aiAnalysis.feedback
-      }],
-      currentQuestionIndex: currentLesson.currentQuestionIndex + 1,
-      totalScore: (currentLesson.totalScore || 0) + score
-    };
-
-    // Проверяем, завершен ли урок
-    if (updatedLesson.currentQuestionIndex >= currentLesson.questions.length) {
-      return await completeLesson(user, updatedLesson, session, env);
-    }
-
-    // Показываем следующий вопрос
-    const nextQuestion = currentLesson.questions[updatedLesson.currentQuestionIndex];
-    const feedback = formatQuestionFeedback(isCorrect, aiAnalysis, nextQuestion);
-    
-    // Отправляем голосовое сообщение с анализом, если пользователь включил эту функцию
-    if (session.settings && session.settings.voiceFeedback) {
-      await sendVoiceAnalysis(user, currentQuestion, text, aiAnalysis, env);
-    }
-    
-    return {
-      message: feedback.message,
-      keyboard: feedback.keyboard,
-      newSession: {
-        ...session,
-        currentLesson: updatedLesson
-      }
-    };
-
-  } catch (error) {
-    console.error('Error processing lesson answer:', error);
-    return {
-      message: '❌ Произошла ошибка при обработке ответа. Попробуйте еще раз.',
-      keyboard: getMainMenuKeyboard(),
-      newSession: session
-    };
-  }
-}
-
-// Функция для отправки голосового анализа
-async function sendVoiceAnalysis(user, question, userAnswer, aiAnalysis, env) {
-  try {
-    const telegramService = createTelegramService(env.TELEGRAM_BOT_TOKEN);
-    const ttsService = createTTSService(env.AI, telegramService);
-    
-    await ttsService.speakLessonWithAnalysis(
-      user.telegram_id,
-      question,
-      userAnswer,
-      aiAnalysis
-    );
-  } catch (error) {
-    console.error('Error sending voice analysis:', error);
-    // Не прерываем основной поток, если голосовой анализ не удался
-  }
-}
-
-function checkAnswer(userAnswer, question) {
-  const correctAnswers = question.correctAnswers || [question.correctAnswer];
-  const userAnswerLower = userAnswer.toLowerCase().trim();
-  
-  return correctAnswers.some(answer => 
-    userAnswerLower.includes(answer.toLowerCase()) ||
-    answer.toLowerCase().includes(userAnswerLower)
-  );
-}
-
-function calculateScore(isCorrect, aiScore) {
-  if (isCorrect) {
-    return Math.max(10, Math.round(aiScore * 20)); // 10-20 баллов за правильный ответ
-  }
-  return Math.round(aiScore * 5); // 0-5 баллов за неправильный ответ
-}
-
+// Функция завершения урока
 async function completeLesson(user, lesson, session, env) {
   try {
     // Обновляем прогресс пользователя
@@ -146,6 +53,24 @@ async function completeLesson(user, lesson, session, env) {
   }
 }
 
+// Функция для отправки голосового анализа
+async function sendVoiceAnalysis(user, question, userAnswer, aiAnalysis, env) {
+  try {
+    const telegramService = createTelegramService(env.TELEGRAM_BOT_TOKEN);
+    const ttsService = createTTSService(env.AI, telegramService);
+    
+    await ttsService.speakLessonWithAnalysis(
+      user.telegram_id,
+      question,
+      userAnswer,
+      aiAnalysis
+    );
+  } catch (error) {
+    console.error('Error sending voice analysis:', error);
+    // Не прерываем основной поток, если голосовой анализ не удался
+  }
+}
+
 // Функция для отправки голосового итога урока
 async function sendLessonSummaryVoice(user, lesson, finalScore, env) {
   try {
@@ -159,12 +84,28 @@ async function sendLessonSummaryVoice(user, lesson, finalScore, env) {
     await ttsService.speakEnglishAndSend(
       user.telegram_id,
       summaryText,
-      'alloy',
       `🎉 <b>Итоги урока</b>\n\n📊 Финальный балл: ${finalScore}/100\n✅ Правильных ответов: ${lesson.answers.filter(a => a.isCorrect).length}/${lesson.questions.length}`
     );
   } catch (error) {
     console.error('Error sending lesson summary voice:', error);
   }
+}
+
+function checkAnswer(userAnswer, question) {
+  const correctAnswers = question.correctAnswers || [question.correctAnswer];
+  const userAnswerLower = userAnswer.toLowerCase().trim();
+  
+  return correctAnswers.some(answer => 
+    userAnswerLower.includes(answer.toLowerCase()) ||
+    answer.toLowerCase().includes(userAnswerLower)
+  );
+}
+
+function calculateScore(isCorrect, aiScore) {
+  if (isCorrect) {
+    return Math.max(10, Math.round(aiScore * 20)); // 10-20 баллов за правильный ответ
+  }
+  return Math.round(aiScore * 5); // 0-5 баллов за неправильный ответ
 }
 
 function formatQuestionFeedback(isCorrect, aiAnalysis, nextQuestion) {
@@ -260,4 +201,110 @@ function getMainMenuKeyboard() {
       ]
     ]
   };
+}
+
+export async function processLessonAnswer(text, user, session, env) {
+  try {
+    const currentLesson = session.currentLesson;
+    const currentQuestion = currentLesson.questions[currentLesson.currentQuestionIndex];
+    
+    // Анализируем ответ с помощью AI
+    const aiAnalysis = await analyzeWithAI(env.AI, text, user, currentQuestion);
+    
+    // Проверяем правильность ответа
+    const isCorrect = checkAnswer(text, currentQuestion);
+    const score = calculateScore(isCorrect, aiAnalysis.score);
+    
+    // Обновляем прогресс урока
+    const updatedLesson = {
+      ...currentLesson,
+      answers: [...(currentLesson.answers || []), {
+        question: currentLesson.currentQuestionIndex,
+        userAnswer: text,
+        isCorrect,
+        aiScore: aiAnalysis.score,
+        aiFeedback: aiAnalysis.feedback
+      }],
+      currentQuestionIndex: currentLesson.currentQuestionIndex + 1,
+      totalScore: (currentLesson.totalScore || 0) + score
+    };
+
+    // Проверяем, завершен ли урок
+    if (updatedLesson.currentQuestionIndex >= currentLesson.questions.length) {
+      return await completeLesson(user, updatedLesson, session, env);
+    }
+
+    // Показываем следующий вопрос
+    const nextQuestion = currentLesson.questions[updatedLesson.currentQuestionIndex];
+    const feedback = formatQuestionFeedback(isCorrect, aiAnalysis, nextQuestion);
+    
+    // Отправляем голосовое сообщение с анализом, если пользователь включил эту функцию
+    if (session.settings && session.settings.voiceFeedback) {
+      await sendVoiceAnalysis(user, currentQuestion, text, aiAnalysis, env);
+    }
+    
+    return {
+      message: feedback.message,
+      keyboard: feedback.keyboard,
+      newSession: {
+        ...session,
+        currentLesson: updatedLesson
+      }
+    };
+
+  } catch (error) {
+    console.error('Error processing lesson answer:', error);
+    return {
+      message: '❌ Произошла ошибка при обработке ответа. Попробуйте еще раз.',
+      keyboard: getMainMenuKeyboard(),
+      newSession: session
+    };
+  }
+}
+
+export async function startLesson(user, session, env) {
+  try {
+    // Получаем случайный урок
+    const lesson = getRandomLesson();
+    
+    if (!lesson) {
+      return {
+        message: '❌ Не удалось найти подходящий урок. Попробуйте позже.',
+        keyboard: getMainMenuKeyboard(),
+        newSession: session
+      };
+    }
+
+    // Создаем новую сессию урока
+    const lessonSession = {
+      ...session,
+      state: 'in_lesson',
+      currentLesson: {
+        id: lesson.id,
+        title: lesson.title,
+        questions: lesson.questions,
+        currentQuestionIndex: 0,
+        startTime: Date.now(),
+        totalScore: 0,
+        answers: []
+      }
+    };
+
+    const firstQuestion = lesson.questions[0];
+    const keyboard = getQuestionKeyboard(firstQuestion);
+
+    return {
+      message: `📚 <b>${lesson.title}</b>\n\n${firstQuestion.text}`,
+      keyboard: keyboard,
+      newSession: lessonSession
+    };
+
+  } catch (error) {
+    console.error('Error starting lesson:', error);
+    return {
+      message: '❌ Ошибка при запуске урока. Попробуйте еще раз.',
+      keyboard: getMainMenuKeyboard(),
+      newSession: session
+    };
+  }
 }
