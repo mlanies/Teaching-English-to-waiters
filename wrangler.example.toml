@@ -1,37 +1,103 @@
+# English for Waiters Bot - Cloudflare Workers Configuration
 name = "english-for-waiters-bot"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
-# D1 Database
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+
+# D1 Database (SQLite) - для хранения пользователей, уроков, достижений
 [[d1_databases]]
 binding = "DB"
 database_name = "english-waiters-db"
-database_id = "YOUR_D1_DATABASE_ID" # Замените на ваш ID
+database_id = "YOUR_D1_DATABASE_ID" # Замените на ваш ID из wrangler d1 list
 
-# KV Namespaces
+# =============================================================================
+# KV STORAGE CONFIGURATION
+# =============================================================================
+
+# KV для хранения пользовательских сессий
 [[kv_namespaces]]
 binding = "USER_SESSIONS"
-id = "YOUR_USER_SESSIONS_KV_ID" # Замените на ваш ID
+id = "YOUR_USER_SESSIONS_KV_ID" # Замените на ваш ID из wrangler kv namespace list
 
+# KV для кэширования уроков
 [[kv_namespaces]]
 binding = "LESSON_CACHE"
-id = "YOUR_LESSON_CACHE_KV_ID" # Замените на ваш ID
+id = "YOUR_LESSON_CACHE_KV_ID" # Замените на ваш ID из wrangler kv namespace list
 
+# KV для контекста AI анализа
 [[kv_namespaces]]
 binding = "AI_CONTEXT"
-id = "YOUR_AI_CONTEXT_KV_ID" # Замените на ваш ID
+id = "YOUR_AI_CONTEXT_KV_ID" # Замените на ваш ID из wrangler kv namespace list
 
-# AI Binding
-[[ai]]
+# =============================================================================
+# AI CONFIGURATION
+# =============================================================================
+
+# Cloudflare AI для TTS и анализа текста
+[ai]
 binding = "AI"
 
-# Environment Variables (не добавляйте секреты сюда!)
-[vars]
-# Все секреты должны быть добавлены через wrangler secret put
-# TELEGRAM_BOT_TOKEN - добавьте через: wrangler secret put TELEGRAM_BOT_TOKEN
-# WEBHOOK_SECRET - добавьте через: wrangler secret put WEBHOOK_SECRET
-# CLOUDFLARE_AI_TOKEN - добавьте через: wrangler secret put CLOUDFLARE_AI_TOKEN
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
 
-# Примеры переменных окружения (не секреты)
+[vars]
+# Название бота (отображается в Telegram)
 BOT_NAME = "English for Waiters Bot"
+
+# Максимальное количество уроков в день
 MAX_LESSONS_PER_DAY = "5"
+
+# =============================================================================
+# SECRETS (ДОБАВЛЯЙТЕ ЧЕРЕЗ КОМАНДЫ WRANGLER)
+# =============================================================================
+
+# ВАЖНО: Не добавляйте секреты в этот файл!
+# Используйте следующие команды для добавления секретов:
+
+# 1. Telegram Bot Token (получите у @BotFather)
+# wrangler secret put TELEGRAM_BOT_TOKEN
+
+# 2. Webhook Secret (сгенерируйте случайную строку)
+# wrangler secret put WEBHOOK_SECRET
+
+# 3. Cloudflare AI Token (если требуется)
+# wrangler secret put CLOUDFLARE_AI_TOKEN
+
+# =============================================================================
+# DEPLOYMENT INSTRUCTIONS
+# =============================================================================
+
+# 1. Скопируйте этот файл в wrangler.toml
+# cp wrangler.example.toml wrangler.toml
+
+# 2. Замените все YOUR_*_ID на реальные ID:
+# - Получите D1 ID: wrangler d1 list
+# - Получите KV ID: wrangler kv namespace list
+
+# 3. Добавьте секреты:
+# wrangler secret put TELEGRAM_BOT_TOKEN
+# wrangler secret put WEBHOOK_SECRET
+
+# 4. Примените миграции базы данных:
+# wrangler d1 execute english-waiters-db --file=./migrations/0000_initial_schema.sql
+# wrangler d1 execute english-waiters-db --file=./migrations/0001_social_features.sql
+
+# 5. Разверните приложение:
+# wrangler deploy
+
+# =============================================================================
+# FEATURES CONFIGURATION
+# =============================================================================
+
+# Доступные функции:
+# ✅ Интерактивные уроки с AI анализом
+# ✅ Готовые примеры с TTS (Text-to-Speech)
+# ✅ Социальные функции (рейтинги, соревнования)
+# ✅ Система достижений и прогресса
+# ✅ Персонализированные цели обучения
+# ✅ Кэширование для производительности
+# ✅ Безопасность и валидация входных данных
