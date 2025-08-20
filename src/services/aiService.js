@@ -151,7 +151,7 @@ export async function analyzeWithAI(ai, text, user, question = null) {
 }`;
     }
 
-    const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
       messages: [
         {
           role: 'system',
@@ -244,7 +244,7 @@ export async function generatePersonalizedLesson(ai, user, weakAreas = []) {
   "difficulty": 2
 }`;
 
-    const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
       messages: [
         {
           role: 'system',
@@ -300,7 +300,7 @@ ${JSON.stringify(progressData, null, 2)}
   "next_goals": ["Достичь уровня 3", "Завершить 10 уроков"]
 }`;
 
-    const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
       messages: [
         {
           role: 'system',
