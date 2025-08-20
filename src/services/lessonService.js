@@ -230,7 +230,8 @@ export function getMainMenuKeyboard() {
         { text: '👥 Группы', callback_data: 'study_groups' }
       ],
       [
-        { text: '❓ Помощь', callback_data: 'help' }
+        { text: '❓ Помощь', callback_data: 'help' },
+        { text: 'ℹ️ О проекте', callback_data: 'about' }
       ]
     ]
   };

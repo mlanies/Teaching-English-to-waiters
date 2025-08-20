@@ -8,6 +8,7 @@ import {
 import { handleProfileCommand } from '../commands/profile.js';
 import { handleAchievementsCommand, handleAllAchievementsCommand } from '../commands/achievements.js';
 import { handleHelpCommand } from '../commands/help.js';
+import { handleAboutCommand } from '../commands/about.js';
 import { handleLeaderboardCommand, handleLeaderboardCallback } from '../commands/leaderboard.js';
 import { 
   handleExamplesCommand, 
@@ -144,6 +145,9 @@ export async function processCallbackData(data, user, session, env) {
         
       case 'help':
         return await handleHelpCommand(user, session);
+        
+      case 'about':
+        return await handleAboutCommand(user, session, env);
         
       case 'leaderboard':
         return await handleLeaderboardCommand(user, env);
