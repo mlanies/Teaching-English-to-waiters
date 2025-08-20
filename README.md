@@ -354,7 +354,7 @@ MIT License. См. [LICENSE](LICENSE) для подробностей.
 
 1. Проверьте [Issues](https://github.com/mlanies/Teaching-English-to-waiters/issues)
 2. Создайте новый Issue с подробным описанием
-3. Свяжитесь с разработчиком: [@mlanies](https://t.me/mlanies)
+3. Свяжитесь с разработчиком: [@mlanies](https://t.me/ilanies)
 
 ---
 
