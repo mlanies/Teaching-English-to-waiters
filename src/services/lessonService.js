@@ -1,8 +1,7 @@
 import { getLessonById, getRandomLesson } from './lessonData.js';
 import { updateUserProgress } from './userService.js';
 import { analyzeWithAI } from './aiService.js';
-import { createTTSService } from './ttsService.js';
-import { createTelegramService } from './telegram.js';
+import { createVoiceButton } from './ttsService.js';
 
 // Функция завершения урока
 export async function completeLesson(user, lesson, session, env) {
@@ -172,15 +171,34 @@ function formatLessonRecommendations(lesson) {
 }
 
 function getQuestionKeyboard(question) {
+  // Создаем кнопку "Озвучить" для вопроса
+  const voiceButton = createVoiceButton(question.text, `voice_question_${question.id}`);
+  
   if (question.type === 'multiple_choice') {
     return {
-      inline_keyboard: question.options.map(option => 
-        [{ text: option, callback_data: `answer:${option}` }]
-      )
+      inline_keyboard: [
+        [voiceButton], // Кнопка озвучивания в отдельной строке
+        ...question.options.map(option => 
+          [{ text: option, callback_data: `answer:${option}` }]
+        )
+      ]
     };
   }
   
-  return null; // Для текстовых ответов
+  // Для текстовых ответов
+  return {
+    inline_keyboard: [
+      [voiceButton], // Кнопка озвучивания
+      [
+        { text: '💡 Показать подсказки', callback_data: 'show_hints' },
+        { text: '📝 Написать ответ', callback_data: 'text_answer' }
+      ],
+      [
+        { text: '⏭️ Пропустить', callback_data: 'skip_question' },
+        { text: '🔙 Выйти', callback_data: 'main_menu' }
+      ]
+    ]
+  };
 }
 
 function getNextQuestionKeyboard(question) {
@@ -328,17 +346,22 @@ export async function processLessonAnswer(text, user, session, env) {
     // Создаем клавиатуру в зависимости от типа урока
     let keyboard = feedback.keyboard;
     
+    // Создаем кнопку "Озвучить" для следующего вопроса
+    const voiceButton = createVoiceButton(nextQuestion.text, `voice_question_${nextQuestion.id}`);
+    
     if (currentLesson.lessonType === 'choice') {
       // Для choice уроков создаем варианты ответов
       const choices = generateChoicesForQuestion(nextQuestion);
-      const choiceButtons = choices.map(choice => 
-        [{ text: choice, callback_data: `answer:${choice}` }]
-      );
-      
-      choiceButtons.push([
-        { text: '⏭️ Пропустить', callback_data: 'skip_question' },
-        { text: '🔙 Выйти', callback_data: 'main_menu' }
-      ]);
+      const choiceButtons = [
+        [voiceButton], // Кнопка озвучивания в отдельной строке
+        ...choices.map(choice => 
+          [{ text: choice, callback_data: `answer:${choice}` }]
+        ),
+        [
+          { text: '⏭️ Пропустить', callback_data: 'skip_question' },
+          { text: '🔙 Выйти', callback_data: 'main_menu' }
+        ]
+      ];
       
       keyboard = {
         inline_keyboard: choiceButtons
@@ -347,6 +370,7 @@ export async function processLessonAnswer(text, user, session, env) {
       // Для текстовых уроков используем стандартную клавиатуру
       keyboard = {
         inline_keyboard: [
+          [voiceButton], // Кнопка озвучивания
           [{ text: '💡 Показать подсказки', callback_data: 'show_hints' }],
           [
             { text: '⏭️ Пропустить', callback_data: 'skip_question' },

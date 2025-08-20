@@ -1,6 +1,6 @@
 {
   "name": "english-for-waiters-bot",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Telegram bot for teaching English to Russian-speaking waiters",
   "main": "src/index.js",
   "scripts": {

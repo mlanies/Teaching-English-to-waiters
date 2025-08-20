@@ -67,6 +67,9 @@ MAX_LESSONS_PER_DAY = "5"
 # 3. Cloudflare AI Token (если требуется)
 # wrangler secret put CLOUDFLARE_AI_TOKEN
 
+# 4. Deepgram API Key (для синтеза речи)
+# wrangler secret put DEEPGRAM_API_KEY
+
 # =============================================================================
 # DEPLOYMENT INSTRUCTIONS
 # =============================================================================
@@ -81,6 +84,7 @@ MAX_LESSONS_PER_DAY = "5"
 # 3. Добавьте секреты:
 # wrangler secret put TELEGRAM_BOT_TOKEN
 # wrangler secret put WEBHOOK_SECRET
+# wrangler secret put DEEPGRAM_API_KEY
 
 # 4. Примените миграции базы данных:
 # wrangler d1 execute english-waiters-db --file=./migrations/0000_initial_schema.sql
@@ -96,6 +100,7 @@ MAX_LESSONS_PER_DAY = "5"
 # Доступные функции:
 # ✅ Интерактивные уроки с AI анализом
 # ✅ Готовые примеры с TTS (Text-to-Speech)
+# ✅ Синтез речи через Deepgram API
 # ✅ Социальные функции (рейтинги, соревнования)
 # ✅ Система достижений и прогресса
 # ✅ Персонализированные цели обучения

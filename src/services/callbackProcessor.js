@@ -19,6 +19,7 @@ import {
 } from '../commands/examples.js';
 import { processLessonAnswer, completeLesson, getMainMenuKeyboard } from './lessonService.js';
 import { getCategories, getLessonsByCategory } from './lessonData.js';
+import { synthesizeAndSendSpeech, parseVoiceCallback } from './ttsService.js';
 
 // Функция для генерации клавиатуры следующего вопроса
 function getNextQuestionKeyboard(question) {
@@ -51,6 +52,36 @@ function getNextQuestionKeyboard(question) {
 export async function processCallbackData(data, user, session, env) {
   try {
     console.log('Processing callback data:', data);
+
+    // Обработка кнопки "Озвучить"
+    if (data.startsWith('voice_')) {
+      const voiceData = parseVoiceCallback(data);
+      if (voiceData && voiceData.type === 'voice') {
+        console.log('Озвучиваем текст:', voiceData.text);
+        
+        // Синтезируем и отправляем речь
+        const result = await synthesizeAndSendSpeech(user.telegram_id, voiceData.text, {
+          voice: 'nova',
+          caption: `🔊 Озвучивание:\n\n"${voiceData.text}"`,
+          filename: 'question_audio.mp3',
+          env: env
+        });
+        
+        if (result.success) {
+          return {
+            message: `✅ Текст озвучен и отправлен!`,
+            keyboard: null, // Не меняем клавиатуру
+            newSession: session
+          };
+        } else {
+          return {
+            message: `❌ Ошибка озвучивания: ${result.error}`,
+            keyboard: null,
+            newSession: session
+          };
+        }
+      }
+    }
 
     // Обработка рейтинга
     if (data.startsWith('leaderboard_')) {

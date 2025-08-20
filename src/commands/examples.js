@@ -5,8 +5,7 @@ import {
   getRandomExample,
   searchExamples 
 } from '../services/examplesService.js';
-import { createTTSService } from '../services/ttsService.js';
-import { createTelegramService } from '../services/telegram.js';
+import { synthesizeAndSendSpeech } from '../services/ttsService.js';
 
 export async function handleExamplesCommand(user, session, env) {
   try {
@@ -211,26 +210,40 @@ export async function handleTTSCommand(user, categoryId, exampleId, ttsType, ses
       };
     }
 
-    // Создаем сервисы
-    const telegramService = createTelegramService(env.TELEGRAM_BOT_TOKEN);
-    const ttsService = createTTSService(env.AI, telegramService);
-    
+    // Используем новую TTS систему
     let ttsResult;
     const chatId = user.telegram_id;
-
+    
+    // Подготавливаем текст в зависимости от типа
+    let textToSpeak = example.english;
+    let caption = `🔊 <b>${example.title}</b>\n\n🇺🇸 ${example.english}\n🇷🇺 ${example.russian}`;
+    
     switch (ttsType) {
       case 'slow':
-        ttsResult = await ttsService.speakSlowlyAndSend(chatId, example.english);
+        // Добавляем паузы для медленного произношения
+        textToSpeak = example.english.split(' ').join(' ... ');
+        caption += '\n\n🐌 <b>Медленное произношение</b>';
         break;
       case 'pronunciation':
-        ttsResult = await ttsService.speakWithPronunciationAndSend(chatId, example.english);
+        // Добавляем паузы для произношения по слогам
+        textToSpeak = example.english.replace(/[.,!?]/g, ' ... ');
+        caption += '\n\n📖 <b>Произношение по слогам</b>';
         break;
       case 'repeat':
-        ttsResult = await ttsService.speakWithRepeatAndSend(chatId, example.english);
+        // Повторяем текст дважды
+        textToSpeak = `${example.english}. ${example.english}`;
+        caption += '\n\n🔄 <b>Повторение для запоминания</b>';
         break;
       default:
-        ttsResult = await ttsService.speakEnglishAndSend(chatId, example.english);
+        caption += '\n\n🔊 <b>Обычное произношение</b>';
     }
+    
+    ttsResult = await synthesizeAndSendSpeech(chatId, textToSpeak, {
+      voice: 'nova',
+      caption: caption,
+      filename: `example_${exampleId}.mp3`,
+      env: env
+    });
 
     if (ttsResult.success) {
       const message = `🔊 <b>Голосовое сообщение отправлено!</b>\n\n` +
