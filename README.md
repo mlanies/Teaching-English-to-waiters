@@ -1,5 +1,9 @@
 # 🍽️ English for Waiters Bot
 
+<div align="center">
+  <img src="Assets/1111.jpg" alt="English for Waiters Bot Logo" width="400" height="300">
+</div>
+
 > Telegram-бот для изучения английского языка официантами с использованием искусственного интеллекта
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-orange)](https://workers.cloudflare.com/)
