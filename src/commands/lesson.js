@@ -138,3 +138,101 @@ export function getAvailableLessonsInCategory(categoryId, userLevel) {
   const lessons = getLessonsByCategory(categoryId);
   return lessons.filter(lesson => lesson.difficulty_level <= userLevel + 1);
 }
+
+// Новая функция для выбора типа уроков с текстовыми ответами
+export async function handleTextLessonsCommand(user, session, env) {
+  try {
+    const categories = getCategories();
+    
+    const message = `✍️ <b>Текстовые ответы</b>\n\n` +
+      `В этом режиме вы будете писать ответы самостоятельно. Это поможет развить навыки письма и запомнить правильные фразы.\n\n` +
+      `Выберите категорию:`;
+
+    const categoryButtons = categories.map(category => ({
+      text: `${category.icon} ${category.name}`,
+      callback_data: `text_category_${category.id}`
+    }));
+
+    // Группируем кнопки по 2 в ряд
+    const keyboardRows = [];
+    for (let i = 0; i < categoryButtons.length; i += 2) {
+      const row = categoryButtons.slice(i, i + 2);
+      keyboardRows.push(row);
+    }
+
+    // Добавляем кнопки управления
+    keyboardRows.push([
+      { text: '🎲 Случайный урок', callback_data: 'random_text_lesson' },
+      { text: '🔙 Главное меню', callback_data: 'main_menu' }
+    ]);
+
+    return {
+      message: message,
+      keyboard: {
+        inline_keyboard: keyboardRows
+      },
+      newSession: { ...session, state: 'selecting_text_lesson' }
+    };
+
+  } catch (error) {
+    console.error('Error in handleTextLessonsCommand:', error);
+    return {
+      message: '❌ Ошибка при загрузке текстовых уроков.',
+      keyboard: {
+        inline_keyboard: [
+          [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      },
+      newSession: session
+    };
+  }
+}
+
+// Новая функция для выбора типа уроков с вариантами ответов
+export async function handleChoiceLessonsCommand(user, session, env) {
+  try {
+    const categories = getCategories();
+    
+    const message = `☑️ <b>Выбор ответа</b>\n\n` +
+      `В этом режиме вы будете выбирать правильный ответ из предложенных вариантов. Это быстрый способ проверить знания.\n\n` +
+      `Выберите категорию:`;
+
+    const categoryButtons = categories.map(category => ({
+      text: `${category.icon} ${category.name}`,
+      callback_data: `choice_category_${category.id}`
+    }));
+
+    // Группируем кнопки по 2 в ряд
+    const keyboardRows = [];
+    for (let i = 0; i < categoryButtons.length; i += 2) {
+      const row = categoryButtons.slice(i, i + 2);
+      keyboardRows.push(row);
+    }
+
+    // Добавляем кнопки управления
+    keyboardRows.push([
+      { text: '🎲 Случайный урок', callback_data: 'random_choice_lesson' },
+      { text: '🔙 Главное меню', callback_data: 'main_menu' }
+    ]);
+
+    return {
+      message: message,
+      keyboard: {
+        inline_keyboard: keyboardRows
+      },
+      newSession: { ...session, state: 'selecting_choice_lesson' }
+    };
+
+  } catch (error) {
+    console.error('Error in handleChoiceLessonsCommand:', error);
+    return {
+      message: '❌ Ошибка при загрузке уроков с выбором ответа.',
+      keyboard: {
+        inline_keyboard: [
+          [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      },
+      newSession: session
+    };
+  }
+}

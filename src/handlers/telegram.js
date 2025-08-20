@@ -60,8 +60,12 @@ async function handleCallbackQuery(callbackQuery, env) {
     const userId = from.id;
     const chatId = message.chat.id;
     
-    // Отвечаем на callback query
-    await answerCallbackQuery(env.TELEGRAM_BOT_TOKEN, id, 'Обрабатываем...');
+    // Отвечаем на callback query (без текста, чтобы избежать ошибки 400)
+    try {
+      await answerCallbackQuery(env.TELEGRAM_BOT_TOKEN, id);
+    } catch (callbackError) {
+      console.log('Callback query answer failed, continuing...');
+    }
     
     // Получаем пользователя
     const user = await getUserOrCreate(env.DB, {

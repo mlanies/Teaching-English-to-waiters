@@ -1,5 +1,5 @@
 import { handleTelegramWebhook } from './handlers/telegram.js';
-import { initializeDatabase } from './database/init.js';
+import { initializeDatabase, initializeLessonsData } from './database/init.js';
 import { setupAchievements } from './achievements/setup.js';
 
 export default {
@@ -7,6 +7,7 @@ export default {
     try {
       // Инициализация базы данных при первом запуске
       await initializeDatabase(env.DB);
+      await initializeLessonsData(env.DB);
       await setupAchievements(env.DB);
 
       // Обработка Telegram webhook

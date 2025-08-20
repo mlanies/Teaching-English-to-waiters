@@ -1,3 +1,5 @@
+import { getAllLessons } from '../services/lessonData.js';
+
 export async function initializeDatabase(db) {
   try {
     // Проверяем, существует ли таблица users
@@ -116,6 +118,44 @@ export async function initializeDatabase(db) {
     return true;
   } catch (error) {
     console.error('Error initializing database:', error);
+    throw error;
+  }
+}
+
+export async function initializeLessonsData(db) {
+  try {
+    // Проверяем, есть ли уже данные уроков
+    const existingLessons = await db.prepare('SELECT COUNT(*) as count FROM lessons').first();
+    
+    if (existingLessons.count > 0) {
+      console.log(`Database already contains ${existingLessons.count} lessons`);
+      return;
+    }
+
+    console.log('Initializing lessons data...');
+    
+    // Получаем все уроки из lessonData.js
+    const lessons = getAllLessons();
+    
+    // Вставляем уроки в базу данных
+    for (const lesson of lessons) {
+      await db.prepare(`
+        INSERT INTO lessons (id, title, description, category, difficulty_level, content, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        lesson.id,
+        lesson.title,
+        lesson.description,
+        lesson.category,
+        lesson.difficulty_level,
+        JSON.stringify(lesson.content),
+        1
+      ).run();
+    }
+    
+    console.log(`Successfully initialized ${lessons.length} lessons`);
+  } catch (error) {
+    console.error('Error initializing lessons data:', error);
     throw error;
   }
 }

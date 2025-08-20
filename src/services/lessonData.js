@@ -52,7 +52,8 @@ const lessons = [
           id: 4,
           text: "Как сказать 'Это наше фирменное блюдо'?",
           type: "text",
-          correctAnswers: ["this is our signature dish", "this is our special dish", "this is our house specialty"],
+          correctAnswer: "This is our signature dish",
+          correctAnswers: ["This is our signature dish", "This is our special dish", "This is our house specialty"],
           topic: "menu",
           explanation: "Signature dish - фирменное блюдо"
         },
@@ -60,21 +61,17 @@ const lessons = [
           id: 5,
           text: "Переведите: 'Блюдо содержит орехи'",
           type: "text",
-          correctAnswers: ["the dish contains nuts", "this dish has nuts", "nuts are included"],
+          correctAnswer: "The dish contains nuts",
+          correctAnswers: ["The dish contains nuts", "This dish has nuts", "Nuts are included"],
           topic: "menu",
           explanation: "Важно предупреждать об аллергенах"
         },
         {
           id: 6,
           text: "Как спросить 'Что вы порекомендуете?'",
-          type: "multiple_choice",
-          options: [
-            "What do you recommend?",
-            "What would you suggest?",
-            "What's your recommendation?",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "What do you recommend?",
+          correctAnswers: ["What do you recommend?", "What would you suggest?", "What's your recommendation?"],
           topic: "menu",
           explanation: "Все варианты корректны для запроса рекомендации"
         }
@@ -92,14 +89,9 @@ const lessons = [
         {
           id: 7,
           text: "Как спросить 'Что вы будете заказывать?'",
-          type: "multiple_choice",
-          options: [
-            "What would you like to order?",
-            "What can I get you?",
-            "What will you have?",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "What would you like to order?",
+          correctAnswers: ["What would you like to order?", "What can I get you?", "What will you have?"],
           topic: "ordering",
           explanation: "Все варианты вежливые и профессиональные"
         },
@@ -107,7 +99,8 @@ const lessons = [
           id: 8,
           text: "Переведите: 'Я принесу ваш заказ через 15 минут'",
           type: "text",
-          correctAnswers: ["i'll bring your order in 15 minutes", "your order will be ready in 15 minutes"],
+          correctAnswer: "I'll bring your order in 15 minutes",
+          correctAnswers: ["I'll bring your order in 15 minutes", "Your order will be ready in 15 minutes"],
           topic: "ordering",
           explanation: "Важно информировать о времени ожидания"
         }
@@ -125,14 +118,9 @@ const lessons = [
         {
           id: 9,
           text: "Как сказать 'Счет, пожалуйста'?",
-          type: "multiple_choice",
-          options: [
-            "The bill, please",
-            "Check, please",
-            "Could I have the bill?",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "The bill, please",
+          correctAnswers: ["The bill, please", "Check, please", "Could I have the bill?"],
           topic: "payment",
           explanation: "Все варианты корректны"
         }
@@ -151,7 +139,8 @@ const lessons = [
           id: 10,
           text: "Как извиниться за долгое ожидание?",
           type: "text",
-          correctAnswers: ["i apologize for the wait", "sorry for keeping you waiting", "thank you for your patience"],
+          correctAnswer: "I apologize for the wait",
+          correctAnswers: ["I apologize for the wait", "Sorry for keeping you waiting", "Thank you for your patience"],
           topic: "emergency",
           explanation: "Важно извиняться за неудобства"
         }
@@ -173,14 +162,9 @@ const lessons = [
         {
           id: 11,
           text: "Как правильно подать вино гостю?",
-          type: "multiple_choice",
-          options: [
-            "Would you like to taste the wine first?",
-            "Let me pour you a sample",
-            "Please taste the wine before I serve",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "Would you like to taste the wine first?",
+          correctAnswers: ["Would you like to taste the wine first?", "Let me pour you a sample", "Please taste the wine before I serve"],
           topic: "wine_service",
           explanation: "В fine dining важно предложить дегустацию вина"
         },
@@ -188,7 +172,8 @@ const lessons = [
           id: 12,
           text: "Переведите: 'Это вино отлично сочетается с вашим блюдом'",
           type: "text",
-          correctAnswers: ["this wine pairs perfectly with your dish", "this wine complements your meal beautifully"],
+          correctAnswer: "This wine pairs perfectly with your dish",
+          correctAnswers: ["This wine pairs perfectly with your dish", "This wine complements your meal beautifully"],
           topic: "wine_service",
           explanation: "Знание сочетаний вина и блюд - важный навык"
         }
@@ -208,14 +193,9 @@ const lessons = [
         {
           id: 13,
           text: "Как спросить 'На вынос или здесь?'",
-          type: "multiple_choice",
-          options: [
-            "For here or to go?",
-            "Eat in or take away?",
-            "Dine in or take out?",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "For here or to go?",
+          correctAnswers: ["For here or to go?", "Eat in or take away?", "Dine in or take out?"],
           topic: "fast_service",
           explanation: "Стандартный вопрос в фастфуде"
         },
@@ -223,7 +203,8 @@ const lessons = [
           id: 14,
           text: "Переведите: 'Ваш заказ будет готов через 5 минут'",
           type: "text",
-          correctAnswers: ["your order will be ready in 5 minutes", "it will take 5 minutes"],
+          correctAnswer: "Your order will be ready in 5 minutes",
+          correctAnswers: ["Your order will be ready in 5 minutes", "It will take 5 minutes"],
           topic: "fast_service",
           explanation: "В фастфуде важно быстрое обслуживание"
         }
@@ -243,14 +224,9 @@ const lessons = [
         {
           id: 15,
           text: "Как спросить 'Какой коктейль вы предпочитаете?'",
-          type: "multiple_choice",
-          options: [
-            "What cocktail would you like?",
-            "Do you have a preference for cocktails?",
-            "What's your favorite cocktail?",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "What cocktail would you like?",
+          correctAnswers: ["What cocktail would you like?", "Do you have a preference for cocktails?", "What's your favorite cocktail?"],
           topic: "cocktails",
           explanation: "Важно узнать предпочтения гостя"
         },
@@ -258,7 +234,8 @@ const lessons = [
           id: 16,
           text: "Переведите: 'Этот коктейль содержит алкоголь'",
           type: "text",
-          correctAnswers: ["this cocktail contains alcohol", "this drink has alcohol in it"],
+          correctAnswer: "This cocktail contains alcohol",
+          correctAnswers: ["This cocktail contains alcohol", "This drink has alcohol in it"],
           topic: "cocktails",
           explanation: "Обязательно предупреждать об алкоголе"
         }
@@ -279,7 +256,8 @@ const lessons = [
           id: 17,
           text: "Как сказать 'Доброе утро, это room service'?",
           type: "text",
-          correctAnswers: ["good morning, this is room service", "hello, room service calling"],
+          correctAnswer: "Good morning, this is room service",
+          correctAnswers: ["Good morning, this is room service", "Hello, room service calling"],
           topic: "room_service",
           explanation: "Стандартное приветствие в room service"
         },
@@ -287,7 +265,8 @@ const lessons = [
           id: 18,
           text: "Переведите: 'Я принесу ваш завтрак в номер'",
           type: "text",
-          correctAnswers: ["i'll bring your breakfast to your room", "i'll deliver your breakfast to your room"],
+          correctAnswer: "I'll bring your breakfast to your room",
+          correctAnswers: ["I'll bring your breakfast to your room", "I'll deliver your breakfast to your room"],
           topic: "room_service",
           explanation: "Важно уточнить доставку в номер"
         }
@@ -307,14 +286,9 @@ const lessons = [
         {
           id: 19,
           text: "Как спросить о диетических ограничениях?",
-          type: "multiple_choice",
-          options: [
-            "Do you have any dietary restrictions?",
-            "Are there any foods you cannot eat?",
-            "Do you follow any special diet?",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "Do you have any dietary restrictions?",
+          correctAnswers: ["Do you have any dietary restrictions?", "Are there any foods you cannot eat?", "Do you follow any special diet?"],
           topic: "dietary_restrictions",
           explanation: "Важно учитывать культурные и религиозные особенности"
         },
@@ -322,7 +296,8 @@ const lessons = [
           id: 20,
           text: "Переведите: 'У нас есть вегетарианские блюда'",
           type: "text",
-          correctAnswers: ["we have vegetarian options", "we offer vegetarian dishes"],
+          correctAnswer: "We have vegetarian options",
+          correctAnswers: ["We have vegetarian options", "We offer vegetarian dishes"],
           topic: "dietary_restrictions",
           explanation: "Важно знать о диетических предпочтениях"
         }

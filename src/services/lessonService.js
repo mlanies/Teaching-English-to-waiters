@@ -5,17 +5,21 @@ import { createTTSService } from './ttsService.js';
 import { createTelegramService } from './telegram.js';
 
 // Функция завершения урока
-async function completeLesson(user, lesson, session, env) {
+export async function completeLesson(user, lesson, session, env) {
   try {
+    // Получаем вопросы из урока (они могут быть в questions или content.questions)
+    const questions = lesson.questions || (lesson.content && lesson.content.questions);
+    const questionsCount = questions ? questions.length : 1;
+    
     // Обновляем прогресс пользователя
-    const finalScore = Math.round(lesson.totalScore / lesson.questions.length);
+    const finalScore = Math.round(lesson.totalScore / questionsCount);
     await updateUserProgress(env.DB, user.id, lesson.id, finalScore, 
       Date.now() - lesson.startTime, lesson.answers.filter(a => !a.isCorrect).length);
 
     const message = `🎉 <b>Урок завершен!</b>\n\n` +
       `📊 <b>Результаты:</b>\n` +
       `• Финальный балл: ${finalScore}/100\n` +
-      `• Правильных ответов: ${lesson.answers.filter(a => a.isCorrect).length}/${lesson.questions.length}\n` +
+      `• Правильных ответов: ${lesson.answers.filter(a => a.isCorrect).length}/${questionsCount}\n` +
       `• Время выполнения: ${Math.round((Date.now() - lesson.startTime) / 1000)} сек\n\n` +
       `⭐ Получено XP: ${finalScore}\n` +
       `📈 Новый уровень: ${user.level + (finalScore >= 80 ? 1 : 0)}\n\n` +
@@ -77,28 +81,50 @@ async function sendLessonSummaryVoice(user, lesson, finalScore, env) {
     const telegramService = createTelegramService(env.TELEGRAM_BOT_TOKEN);
     const ttsService = createTTSService(env.AI, telegramService);
     
+    // Получаем количество вопросов
+    const questions = lesson.questions || (lesson.content && lesson.content.questions);
+    const questionsCount = questions ? questions.length : 1;
+    
     const summaryText = `Lesson completed! Your final score is ${finalScore} out of 100. ` +
-      `You answered ${lesson.answers.filter(a => a.isCorrect).length} out of ${lesson.questions.length} questions correctly. ` +
+      `You answered ${lesson.answers.filter(a => a.isCorrect).length} out of ${questionsCount} questions correctly. ` +
       `Great job! Keep practicing to improve your English skills.`;
     
     await ttsService.speakEnglishAndSend(
       user.telegram_id,
       summaryText,
-      `🎉 <b>Итоги урока</b>\n\n📊 Финальный балл: ${finalScore}/100\n✅ Правильных ответов: ${lesson.answers.filter(a => a.isCorrect).length}/${lesson.questions.length}`
+      `🎉 <b>Итоги урока</b>\n\n📊 Финальный балл: ${finalScore}/100\n✅ Правильных ответов: ${lesson.answers.filter(a => a.isCorrect).length}/${questionsCount}`
     );
   } catch (error) {
     console.error('Error sending lesson summary voice:', error);
   }
 }
 
-function checkAnswer(userAnswer, question) {
+export function checkAnswer(userAnswer, question) {
+  // Получаем все возможные правильные ответы
   const correctAnswers = question.correctAnswers || [question.correctAnswer];
   const userAnswerLower = userAnswer.toLowerCase().trim();
   
-  return correctAnswers.some(answer => 
-    userAnswerLower.includes(answer.toLowerCase()) ||
-    answer.toLowerCase().includes(userAnswerLower)
-  );
+  // Проверяем точное совпадение
+  if (correctAnswers.some(answer => userAnswerLower === answer.toLowerCase().trim())) {
+    return true;
+  }
+  
+  // Проверяем частичное совпадение (если ответ содержит ключевые слова)
+  return correctAnswers.some(answer => {
+    const answerLower = answer.toLowerCase().trim();
+    const answerWords = answerLower.split(' ').filter(word => word.length > 2);
+    const userWords = userAnswerLower.split(' ').filter(word => word.length > 2);
+    
+    // Если пользователь использовал большинство ключевых слов из правильного ответа
+    const matchingWords = answerWords.filter(word => userWords.includes(word));
+    
+    // Более мягкая проверка для коротких фраз
+    if (answerWords.length <= 3) {
+      return matchingWords.length >= Math.max(1, Math.floor(answerWords.length * 0.6));
+    }
+    
+    return matchingWords.length >= Math.max(1, Math.floor(answerWords.length * 0.7));
+  });
 }
 
 function calculateScore(isCorrect, aiScore) {
@@ -108,17 +134,21 @@ function calculateScore(isCorrect, aiScore) {
   return Math.round(aiScore * 5); // 0-5 баллов за неправильный ответ
 }
 
-function formatQuestionFeedback(isCorrect, aiAnalysis, nextQuestion) {
+export function formatQuestionFeedback(isCorrect, aiAnalysis, nextQuestion) {
   let message = '';
+  
+  // Получаем правильный ответ из анализа ИИ или из вопроса
+  const correctAnswer = aiAnalysis.correct_answer || aiAnalysis.correctAnswer || 'Правильный ответ не найден';
+  const explanation = aiAnalysis.explanation || 'Объяснение не доступно';
   
   if (isCorrect) {
     message = `✅ <b>Правильно!</b>\n\n` +
-      `💡 <b>Объяснение:</b> ${aiAnalysis.explanation}\n\n` +
+      `💡 <b>Объяснение:</b> ${explanation}\n\n` +
       `📝 <b>Следующий вопрос:</b>\n${nextQuestion.text}`;
   } else {
     message = `❌ <b>Неправильно</b>\n\n` +
-      `✅ <b>Правильный ответ:</b> ${aiAnalysis.correct_answer}\n\n` +
-      `💡 <b>Объяснение:</b> ${aiAnalysis.explanation}\n\n` +
+      `✅ <b>Правильный ответ:</b> ${correctAnswer}\n\n` +
+      `💡 <b>Объяснение:</b> ${explanation}\n\n` +
       `📝 <b>Следующий вопрос:</b>\n${nextQuestion.text}`;
   }
 
@@ -180,33 +210,89 @@ function getNextQuestionKeyboard(question) {
   }
 }
 
-function getMainMenuKeyboard() {
+export function getMainMenuKeyboard() {
   return {
     inline_keyboard: [
       [
-        { text: '📚 Начать урок', callback_data: 'start_lesson' },
-        { text: '📊 Мой профиль', callback_data: 'profile' }
+        { text: '✍️ Текстовые ответы', callback_data: 'text_lessons' },
+        { text: '☑️ Выбор ответа', callback_data: 'choice_lessons' }
       ],
       [
-        { text: '🏆 Достижения', callback_data: 'achievements' },
-        { text: '🏅 Рейтинг', callback_data: 'leaderboard' }
+        { text: '📊 Мой профиль', callback_data: 'profile' },
+        { text: '🏆 Достижения', callback_data: 'achievements' }
       ],
       [
-        { text: '📖 Готовые примеры', callback_data: 'examples' },
-        { text: '🎯 Соревнования', callback_data: 'competitions' }
+        { text: '🏅 Рейтинг', callback_data: 'leaderboard' },
+        { text: '📖 Готовые примеры', callback_data: 'examples' }
       ],
       [
-        { text: '👥 Группы', callback_data: 'study_groups' },
+        { text: '🎯 Соревнования', callback_data: 'competitions' },
+        { text: '👥 Группы', callback_data: 'study_groups' }
+      ],
+      [
         { text: '❓ Помощь', callback_data: 'help' }
       ]
     ]
   };
 }
 
+// Функция для генерации вариантов ответов
+export function generateChoicesForQuestion(question) {
+  const correctAnswer = question.correctAnswer;
+  const allChoices = question.correctAnswers || [correctAnswer];
+  
+  // Создаем несколько неправильных вариантов
+  const wrongChoices = [
+    "Good morning",
+    "Thank you",
+    "Please wait",
+    "Excuse me",
+    "Have a nice day",
+    "See you later",
+    "You're welcome",
+    "I'm sorry"
+  ];
+  
+  // Берем правильный ответ и 2-3 неправильных
+  const choices = [correctAnswer];
+  const shuffledWrong = wrongChoices.filter(choice => 
+    !allChoices.some(correct => correct.toLowerCase().includes(choice.toLowerCase()))
+  ).sort(() => Math.random() - 0.5).slice(0, 3);
+  
+  choices.push(...shuffledWrong);
+  
+  // Перемешиваем все варианты
+  return choices.sort(() => Math.random() - 0.5);
+}
+
 export async function processLessonAnswer(text, user, session, env) {
   try {
     const currentLesson = session.currentLesson;
-    const currentQuestion = currentLesson.questions[currentLesson.currentQuestionIndex];
+    
+    // Получаем вопросы из урока (они могут быть в questions или content.questions)
+    const questions = currentLesson.questions || (currentLesson.content && currentLesson.content.questions);
+    
+    // Проверяем, что урок существует и имеет вопросы
+    if (!currentLesson || !questions || !Array.isArray(questions)) {
+      console.error('Invalid lesson structure:', currentLesson);
+      return {
+        message: '❌ Ошибка структуры урока. Попробуйте начать урок заново.',
+        keyboard: getMainMenuKeyboard(),
+        newSession: { ...session, currentLesson: null, state: 'main_menu' }
+      };
+    }
+    
+    const currentQuestion = questions[currentLesson.currentQuestionIndex];
+    
+    // Проверяем, что вопрос существует
+    if (!currentQuestion) {
+      console.error('Question not found at index:', currentLesson.currentQuestionIndex);
+      return {
+        message: '❌ Вопрос не найден. Попробуйте начать урок заново.',
+        keyboard: getMainMenuKeyboard(),
+        newSession: { ...session, currentLesson: null, state: 'main_menu' }
+      };
+    }
     
     // Анализируем ответ с помощью AI
     const aiAnalysis = await analyzeWithAI(env.AI, text, user, currentQuestion);
@@ -230,13 +316,44 @@ export async function processLessonAnswer(text, user, session, env) {
     };
 
     // Проверяем, завершен ли урок
-    if (updatedLesson.currentQuestionIndex >= currentLesson.questions.length) {
+    if (updatedLesson.currentQuestionIndex >= questions.length) {
       return await completeLesson(user, updatedLesson, session, env);
     }
 
     // Показываем следующий вопрос
-    const nextQuestion = currentLesson.questions[updatedLesson.currentQuestionIndex];
+    const nextQuestion = questions[updatedLesson.currentQuestionIndex];
     const feedback = formatQuestionFeedback(isCorrect, aiAnalysis, nextQuestion);
+    
+    // Создаем клавиатуру в зависимости от типа урока
+    let keyboard = feedback.keyboard;
+    
+    if (currentLesson.lessonType === 'choice') {
+      // Для choice уроков создаем варианты ответов
+      const choices = generateChoicesForQuestion(nextQuestion);
+      const choiceButtons = choices.map(choice => 
+        [{ text: choice, callback_data: `answer:${choice}` }]
+      );
+      
+      choiceButtons.push([
+        { text: '⏭️ Пропустить', callback_data: 'skip_question' },
+        { text: '🔙 Выйти', callback_data: 'main_menu' }
+      ]);
+      
+      keyboard = {
+        inline_keyboard: choiceButtons
+      };
+    } else {
+      // Для текстовых уроков используем стандартную клавиатуру
+      keyboard = {
+        inline_keyboard: [
+          [{ text: '💡 Показать подсказки', callback_data: 'show_hints' }],
+          [
+            { text: '⏭️ Пропустить', callback_data: 'skip_question' },
+            { text: '🔙 Выйти', callback_data: 'main_menu' }
+          ]
+        ]
+      };
+    }
     
     // Отправляем голосовое сообщение с анализом, если пользователь включил эту функцию
     if (session.settings && session.settings.voiceFeedback) {
@@ -245,7 +362,7 @@ export async function processLessonAnswer(text, user, session, env) {
     
     return {
       message: feedback.message,
-      keyboard: feedback.keyboard,
+      keyboard: keyboard,
       newSession: {
         ...session,
         currentLesson: updatedLesson
@@ -264,8 +381,35 @@ export async function processLessonAnswer(text, user, session, env) {
 
 export async function startLesson(user, session, env) {
   try {
-    // Получаем случайный урок
-    const lesson = getRandomLesson();
+    // Сначала пытаемся получить урок из базы данных
+    let lesson = null;
+    
+    try {
+      const dbLesson = await env.DB.prepare(`
+        SELECT * FROM lessons 
+        WHERE is_active = 1 
+        ORDER BY RANDOM() 
+        LIMIT 1
+      `).first();
+      
+      if (dbLesson) {
+        lesson = {
+          id: dbLesson.id,
+          title: dbLesson.title,
+          description: dbLesson.description,
+          category: dbLesson.category,
+          difficulty_level: dbLesson.difficulty_level,
+          content: JSON.parse(dbLesson.content)
+        };
+      }
+    } catch (dbError) {
+      console.log('Database lesson not found, using static data');
+    }
+    
+    // Если урок не найден в БД, используем статические данные
+    if (!lesson) {
+      lesson = getRandomLesson();
+    }
     
     if (!lesson) {
       return {

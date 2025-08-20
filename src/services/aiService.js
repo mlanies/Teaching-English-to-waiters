@@ -167,7 +167,18 @@ export async function analyzeWithAI(ai, text, user, question = null) {
 
     // Парсим JSON ответ
     try {
-      const aiResponse = JSON.parse(response.response);
+      // Пытаемся извлечь JSON из ответа, если есть дополнительный текст
+      let jsonString = response.response.trim();
+      
+      // Ищем начало и конец JSON объекта
+      const jsonStart = jsonString.indexOf('{');
+      const jsonEnd = jsonString.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        jsonString = jsonString.substring(jsonStart, jsonEnd + 1);
+      }
+      
+      const aiResponse = JSON.parse(jsonString);
       return {
         score: aiResponse.score || 0.5,
         feedback: aiResponse.feedback || 'Спасибо за ответ!',
@@ -184,12 +195,18 @@ export async function analyzeWithAI(ai, text, user, question = null) {
         empathy_score: aiResponse.empathy_score || 0.5
       };
     } catch (parseError) {
+      console.error('Error parsing AI response:', parseError);
+      console.log('Raw AI response:', response.response);
+      
       // Если не удалось распарсить JSON, возвращаем базовый анализ
+      const correctAnswer = question ? (question.correctAnswer || question.correctAnswers?.[0] || 'Правильный ответ не найден') : 'Правильный ответ не найден';
+      const explanation = question ? `Это правильный ответ для вопроса: "${question.text}". Используйте эту фразу в работе с гостями.` : 'Объяснение не доступно';
+      
       return {
         score: 0.7,
         feedback: response.response || 'Спасибо за ответ!',
-        correct_answer: question ? (question.correctAnswer || question.correctAnswers?.[0] || 'Правильный ответ не найден') : 'Правильный ответ не найден',
-        explanation: question ? `Это правильный ответ для вопроса: "${question.text}". Используйте эту фразу в работе с гостями.` : 'Объяснение не доступно',
+        correct_answer: correctAnswer,
+        explanation: explanation,
         suggestions: 'Продолжайте практиковаться!',
         grammar_score: 0.7,
         vocabulary_score: 0.7,
@@ -204,12 +221,16 @@ export async function analyzeWithAI(ai, text, user, question = null) {
 
   } catch (error) {
     console.error('Error in AI analysis:', error);
+    
     // Возвращаем базовый ответ в случае ошибки
+    const correctAnswer = question ? (question.correctAnswer || question.correctAnswers?.[0] || 'Правильный ответ не найден') : 'Правильный ответ не найден';
+    const explanation = question ? `Это правильный ответ для вопроса: "${question.text}". Используйте эту фразу в работе с гостями.` : 'Объяснение не доступно';
+    
     return {
       score: 0.5,
       feedback: 'Спасибо за ответ! Продолжайте практиковаться.',
-      correct_answer: question ? (question.correctAnswer || question.correctAnswers?.[0] || 'Правильный ответ не найден') : 'Правильный ответ не найден',
-      explanation: question ? `Это правильный ответ для вопроса: "${question.text}". Используйте эту фразу в работе с гостями.` : 'Объяснение не доступно',
+      correct_answer: correctAnswer,
+      explanation: explanation,
       suggestions: 'Рекомендую больше практиковаться с носителями языка.',
       grammar_score: 0.5,
       vocabulary_score: 0.5,

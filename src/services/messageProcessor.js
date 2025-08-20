@@ -3,7 +3,7 @@ import { handleLessonCommand } from '../commands/lesson.js';
 import { handleProfileCommand } from '../commands/profile.js';
 import { handleAchievementsCommand } from '../commands/achievements.js';
 import { handleHelpCommand } from '../commands/help.js';
-import { processLessonAnswer } from '../services/lessonService.js';
+import { processLessonAnswer, getMainMenuKeyboard } from '../services/lessonService.js';
 import { analyzeWithAI } from '../services/aiService.js';
 
 export async function processMessage(text, user, session, env) {
@@ -30,6 +30,20 @@ export async function processMessage(text, user, session, env) {
     return await handleLessonCommand(user, session, env);
   }
 
+  // Обработка ввода имени для новых пользователей
+  if (session && session.state === 'waiting_for_name') {
+    return {
+      message: `🎉 Приятно познакомиться, <b>${text}</b>!\n\n🍽️ <b>English for Waiters</b> - ваш персональный помощник в изучении английского для работы официантом.\n\n📊 Ваш уровень: <b>1</b>\n⭐ Опыт: <b>0</b> XP\n📚 Завершено уроков: <b>0</b>\n\n🎯 Давайте начнем обучение! Выберите действие:`,
+      keyboard: getMainMenuKeyboard(),
+      newSession: { 
+        ...session, 
+        state: 'main_menu',
+        lastActivity: Date.now(),
+        userName: text
+      }
+    };
+  }
+
   // Обработка ответов на уроки
   if (session && session.currentLesson) {
     return await processLessonAnswer(text, user, session, env);
@@ -54,17 +68,4 @@ export async function processMessage(text, user, session, env) {
   };
 }
 
-function getMainMenuKeyboard() {
-  return {
-    inline_keyboard: [
-      [
-        { text: '📚 Начать урок', callback_data: 'start_lesson' },
-        { text: '📊 Мой профиль', callback_data: 'profile' }
-      ],
-      [
-        { text: '🏆 Достижения', callback_data: 'achievements' },
-        { text: '❓ Помощь', callback_data: 'help' }
-      ]
-    ]
-  };
-}
+

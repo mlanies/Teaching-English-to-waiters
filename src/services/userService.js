@@ -57,6 +57,26 @@ export async function getUserOrCreate(db, userData) {
 
 export async function updateUserProgress(db, userId, lessonId, score, timeSpent, mistakesCount) {
   try {
+    // Проверяем, существует ли урок в базе данных
+    const lessonExists = await db.prepare(`
+      SELECT id FROM lessons WHERE id = ?
+    `).bind(lessonId).first();
+
+    if (!lessonExists) {
+      console.log(`Lesson ${lessonId} not found in database, skipping FOREIGN KEY constraint`);
+      // Просто обновляем статистику пользователя без сохранения прогресса
+      await db.prepare(`
+        UPDATE users 
+        SET total_lessons_completed = total_lessons_completed + 1,
+            experience_points = experience_points + ?,
+            level = (experience_points + ?) / 100 + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).bind(score, score, userId).run();
+      
+      return true;
+    }
+
     // Добавляем запись о прогрессе
     await db.prepare(`
       INSERT OR REPLACE INTO progress (user_id, lesson_id, score, time_spent, mistakes_count, accuracy_percentage)

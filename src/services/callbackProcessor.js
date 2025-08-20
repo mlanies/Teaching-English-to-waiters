@@ -1,5 +1,10 @@
 import { handleStartCommand } from '../commands/start.js';
-import { handleLessonCommand, handleLessonCategoryCommand } from '../commands/lesson.js';
+import { 
+  handleLessonCommand, 
+  handleLessonCategoryCommand,
+  handleTextLessonsCommand,
+  handleChoiceLessonsCommand 
+} from '../commands/lesson.js';
 import { handleProfileCommand } from '../commands/profile.js';
 import { handleAchievementsCommand, handleAllAchievementsCommand } from '../commands/achievements.js';
 import { handleHelpCommand } from '../commands/help.js';
@@ -11,7 +16,7 @@ import {
   handleTTSCommand,
   handleRandomExampleCommand 
 } from '../commands/examples.js';
-import { processLessonAnswer } from './lessonService.js';
+import { processLessonAnswer, completeLesson, getMainMenuKeyboard } from './lessonService.js';
 import { getCategories, getLessonsByCategory } from './lessonData.js';
 
 // Функция для генерации клавиатуры следующего вопроса
@@ -56,6 +61,18 @@ export async function processCallbackData(data, user, session, env) {
     if (data.startsWith('category_')) {
       const category = data.replace('category_', '');
       return await handleCategorySelection(user, category, session, env);
+    }
+
+    // Обработка категорий текстовых уроков
+    if (data.startsWith('text_category_')) {
+      const category = data.replace('text_category_', '');
+      return await handleTextCategorySelection(user, category, session, env);
+    }
+
+    // Обработка категорий choice уроков
+    if (data.startsWith('choice_category_')) {
+      const category = data.replace('choice_category_', '');
+      return await handleChoiceCategorySelection(user, category, session, env);
     }
 
     // Обработка примеров
@@ -104,6 +121,12 @@ export async function processCallbackData(data, user, session, env) {
       case 'start_lesson':
         return await handleLessonCommand(user, session, env);
         
+      case 'text_lessons':
+        return await handleTextLessonsCommand(user, session, env);
+        
+      case 'choice_lessons':
+        return await handleChoiceLessonsCommand(user, session, env);
+        
       case 'profile':
         return await handleProfileCommand(user, session, env);
         
@@ -137,26 +160,7 @@ export async function processCallbackData(data, user, session, env) {
       case 'back_to_main':
         return {
           message: `👋 С возвращением, <b>${user.first_name}</b>!\n\n🍽️ <b>English for Waiters</b> - ваш персональный помощник в изучении английского для работы официантом.\n\n📊 Ваш уровень: <b>${user.level}</b>\n⭐ Опыт: <b>${user.experience_points}</b> XP\n📚 Завершено уроков: <b>${user.total_lessons_completed}</b>\n\nВыберите действие:`,
-          keyboard: {
-            inline_keyboard: [
-              [
-                { text: '📚 Начать урок', callback_data: 'start_lesson' },
-                { text: '📊 Мой профиль', callback_data: 'profile' }
-              ],
-              [
-                { text: '🏆 Достижения', callback_data: 'achievements' },
-                { text: '🏅 Рейтинг', callback_data: 'leaderboard' }
-              ],
-              [
-                { text: '📖 Готовые примеры', callback_data: 'examples' },
-                { text: '🎯 Соревнования', callback_data: 'competitions' }
-              ],
-              [
-                { text: '👥 Группы', callback_data: 'study_groups' },
-                { text: '❓ Помощь', callback_data: 'help' }
-              ]
-            ]
-          },
+          keyboard: getMainMenuKeyboard(),
           newSession: { ...session, state: 'main_menu' }
         };
         
@@ -169,26 +173,7 @@ export async function processCallbackData(data, user, session, env) {
       case 'main_menu':
         return {
           message: `🍽️ <b>English for Waiters</b>\n\nВыберите действие:`,
-          keyboard: {
-            inline_keyboard: [
-              [
-                { text: '📚 Начать урок', callback_data: 'start_lesson' },
-                { text: '📊 Мой профиль', callback_data: 'profile' }
-              ],
-              [
-                { text: '🏆 Достижения', callback_data: 'achievements' },
-                { text: '🏅 Рейтинг', callback_data: 'leaderboard' }
-              ],
-              [
-                { text: '📖 Готовые примеры', callback_data: 'examples' },
-                { text: '🎯 Соревнования', callback_data: 'competitions' }
-              ],
-              [
-                { text: '👥 Группы', callback_data: 'study_groups' },
-                { text: '❓ Помощь', callback_data: 'help' }
-              ]
-            ]
-          },
+          keyboard: getMainMenuKeyboard(),
           newSession: { ...session, state: 'main_menu' }
         };
         
@@ -457,4 +442,191 @@ async function handleStudyGroupsCommand(user, env) {
       ]
     }
   };
+}
+
+// Обработка выбора категории для текстовых уроков
+async function handleTextCategorySelection(user, category, session, env) {
+  try {
+    const categories = getCategories();
+    const selectedCategory = categories.find(cat => cat.id === category);
+    
+    if (!selectedCategory) {
+      return {
+        message: '❌ Категория не найдена.',
+        keyboard: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: 'text_lessons' }]
+          ]
+        }
+      };
+    }
+    
+    const lessons = getLessonsByCategory(category);
+    const availableLessons = lessons.filter(lesson => lesson.difficulty_level <= user.level + 1);
+    
+    if (availableLessons.length === 0) {
+      return {
+        message: `📚 <b>${selectedCategory.name}</b>\n\n${selectedCategory.description}\n\n❌ Пока нет доступных уроков для вашего уровня.`,
+        keyboard: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: 'text_lessons' }]
+          ]
+        }
+      };
+    }
+    
+    // Выбираем случайный урок из доступных
+    const randomLesson = availableLessons[Math.floor(Math.random() * availableLessons.length)];
+    
+    const lessonSession = {
+      ...session,
+      currentLesson: {
+        ...randomLesson,
+        currentQuestionIndex: 0,
+        startTime: Date.now(),
+        answers: [],
+        skippedQuestions: [],
+        lessonType: 'text' // Указываем тип урока
+      },
+      state: 'in_lesson'
+    };
+    
+    const firstQuestion = randomLesson.content.questions[0];
+    
+    return {
+      message: `✍️ <b>${randomLesson.title}</b>\n\n${randomLesson.description}\n\n📝 <b>Вопрос 1 из ${randomLesson.content.questions.length}</b>\n\n${firstQuestion.text}\n\n💡 <i>Напишите ваш ответ текстом</i>`,
+      keyboard: {
+        inline_keyboard: [
+          [{ text: '💡 Показать подсказки', callback_data: 'show_hints' }],
+          [
+            { text: '⏭️ Пропустить', callback_data: 'skip_question' },
+            { text: '🔙 Выйти', callback_data: 'main_menu' }
+          ]
+        ]
+      },
+      newSession: lessonSession
+    };
+    
+  } catch (error) {
+    console.error('Error in handleTextCategorySelection:', error);
+    return {
+      message: '❌ Произошла ошибка при выборе категории.',
+      keyboard: {
+        inline_keyboard: [
+          [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      }
+    };
+  }
+}
+
+// Обработка выбора категории для choice уроков (с вариантами ответов)
+async function handleChoiceCategorySelection(user, category, session, env) {
+  try {
+    const categories = getCategories();
+    const selectedCategory = categories.find(cat => cat.id === category);
+    
+    if (!selectedCategory) {
+      return {
+        message: '❌ Категория не найдена.',
+        keyboard: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: 'choice_lessons' }]
+          ]
+        }
+      };
+    }
+    
+    const lessons = getLessonsByCategory(category);
+    const availableLessons = lessons.filter(lesson => lesson.difficulty_level <= user.level + 1);
+    
+    if (availableLessons.length === 0) {
+      return {
+        message: `📚 <b>${selectedCategory.name}</b>\n\n${selectedCategory.description}\n\n❌ Пока нет доступных уроков для вашего уровня.`,
+        keyboard: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: 'choice_lessons' }]
+          ]
+        }
+      };
+    }
+    
+    // Выбираем случайный урок из доступных
+    const randomLesson = availableLessons[Math.floor(Math.random() * availableLessons.length)];
+    
+    // Создаем варианты ответов для первого вопроса
+    const firstQuestion = randomLesson.content.questions[0];
+    const choices = generateChoicesForQuestion(firstQuestion);
+    
+    const lessonSession = {
+      ...session,
+      currentLesson: {
+        ...randomLesson,
+        currentQuestionIndex: 0,
+        startTime: Date.now(),
+        answers: [],
+        skippedQuestions: [],
+        lessonType: 'choice' // Указываем тип урока
+      },
+      state: 'in_lesson'
+    };
+    
+    // Создаем клавиатуру с вариантами ответов
+    const choiceButtons = choices.map(choice => 
+      [{ text: choice, callback_data: `answer:${choice}` }]
+    );
+    
+    choiceButtons.push([
+      { text: '⏭️ Пропустить', callback_data: 'skip_question' },
+      { text: '🔙 Выйти', callback_data: 'main_menu' }
+    ]);
+    
+    return {
+      message: `☑️ <b>${randomLesson.title}</b>\n\n${randomLesson.description}\n\n📝 <b>Вопрос 1 из ${randomLesson.content.questions.length}</b>\n\n${firstQuestion.text}\n\n💡 <i>Выберите правильный ответ:</i>`,
+      keyboard: {
+        inline_keyboard: choiceButtons
+      },
+      newSession: lessonSession
+    };
+    
+  } catch (error) {
+    console.error('Error in handleChoiceCategorySelection:', error);
+    return {
+      message: '❌ Произошла ошибка при выборе категории.',
+      keyboard: {
+        inline_keyboard: [
+          [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      }
+    };
+  }
+}
+
+// Функция для генерации вариантов ответов
+function generateChoicesForQuestion(question) {
+  const correctAnswer = question.correctAnswer;
+  const allChoices = question.correctAnswers || [correctAnswer];
+  
+  // Создаем несколько неправильных вариантов
+  const wrongChoices = [
+    "Good morning",
+    "Thank you",
+    "Please wait",
+    "Excuse me",
+    "Have a nice day",
+    "See you later",
+    "You're welcome",
+    "I'm sorry"
+  ];
+  
+  // Берем правильный ответ и 2-3 неправильных
+  const choices = [correctAnswer];
+  const shuffledWrong = wrongChoices.filter(choice => 
+    !allChoices.some(correct => correct.toLowerCase().includes(choice.toLowerCase()))
+  ).sort(() => Math.random() - 0.5).slice(0, 3);
+  
+  choices.push(...shuffledWrong);
+  
+  // Перемешиваем все варианты
+  return choices.sort(() => Math.random() - 0.5);
 }

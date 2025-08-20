@@ -73,7 +73,8 @@ export async function answerCallbackQuery(botToken, callbackQueryId, text = null
       callback_query_id: callbackQueryId
     };
 
-    if (text) {
+    // Добавляем текст только если он не пустой и не слишком длинный
+    if (text && text.length > 0 && text.length <= 200) {
       payload.text = text;
     }
 
@@ -86,7 +87,9 @@ export async function answerCallbackQuery(botToken, callbackQueryId, text = null
     });
 
     if (!response.ok) {
-      throw new Error(`Telegram API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Telegram API error ${response.status}:`, errorText);
+      throw new Error(`Telegram API error: ${response.status} - ${errorText}`);
     }
 
     return await response.json();
