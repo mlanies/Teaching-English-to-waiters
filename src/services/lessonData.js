@@ -13,44 +13,29 @@ const lessons = [
         {
           id: 1,
           text: "Как правильно поприветствовать гостя?",
-          type: "multiple_choice",
-          options: [
-            "Hello, welcome to our restaurant!",
-            "Good evening, how are you?",
-            "Hi there, nice to see you!",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "Hello, welcome to our restaurant!",
+          correctAnswers: ["Hello, welcome to our restaurant!", "Welcome to our restaurant!", "Hello, welcome!"],
           topic: "greeting",
-          explanation: "Все варианты правильные для приветствия гостей в ресторане"
+          explanation: "Используйте вежливое приветствие с приглашением в ресторан"
         },
         {
           id: 2,
           text: "Переведите: 'Добро пожаловать в наш ресторан'",
-          type: "multiple_choice",
-          options: [
-            "Welcome to our restaurant",
-            "Welcome to the restaurant", 
-            "Welcome to our place",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "Welcome to our restaurant",
+          correctAnswers: ["Welcome to our restaurant", "Welcome to the restaurant", "Welcome to our place"],
           topic: "greeting",
-          explanation: "Все варианты правильные для приветствия гостей"
+          explanation: "Правильный перевод приветственной фразы"
         },
         {
           id: 3,
           text: "Как спросить 'Сколько вас?'",
-          type: "multiple_choice",
-          options: [
-            "How many are you?",
-            "How many people?",
-            "How many persons?",
-            "All of the above"
-          ],
-          correctAnswer: "All of the above",
+          type: "text",
+          correctAnswer: "How many people are in your party?",
+          correctAnswers: ["How many people are in your party?", "How many are you?", "How many people?"],
           topic: "greeting",
-          explanation: "Все варианты правильные для уточнения количества гостей"
+          explanation: "Вежливый способ узнать количество гостей"
         }
       ]
     }
